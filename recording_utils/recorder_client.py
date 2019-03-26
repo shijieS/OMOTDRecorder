@@ -90,6 +90,7 @@ class SRecorder:
                       sensor_tick=0.04,
                       enable_postprocess_effects=True,
                       actor=None,
+                      max_record_frame=1000000,
                       camera_tag="Camera0"):
         """
         Create a RGB camera to the world
@@ -108,6 +109,8 @@ class SRecorder:
         :param camera_tag: camera name which also decides the save path
         :return:
         """
+        self.max_record_frame=max_record_frame
+
         bp = self.world.get_blueprint_library().find('sensor.camera.rgb')
         bp.set_attribute('image_size_x', str(width))
         bp.set_attribute('image_size_y', str(height))
@@ -255,7 +258,9 @@ class SRecorder:
             self.camera_dict[k].add_listen_queue()
             self.camera_dict[k].add_display()
 
-        while True:
+        current_record_frame = 0
+        while current_record_frame < self.max_record_frame:
+            current_record_frame += 1
             if self.process_event():
                 break
 
