@@ -7,7 +7,8 @@ argparser = argparse.ArgumentParser(
 
 argparser.add_argument(
         '--config_name',
-        default='town1.json',
+        default='town1_cross.json',
+        # default='town1.json',
         help='configure file name')
 
 args = argparser.parse_args()

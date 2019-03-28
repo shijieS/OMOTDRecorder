@@ -251,7 +251,7 @@ class SRecorder:
         camera = self.camera_dict[camera_tag]
         frame_number = image.frame_number
         all_vehicles = self._get_all_vechicles()
-        bounding_boxes, rects, ids = camera.get_bounding_boxes(all_vehicles)
+        bounding_boxes, rects, ids, physical_params = camera.get_bounding_boxes(all_vehicles)
         overlap_ratios = camera.get_overlap_ratio(rects, image_depth)
 
         image = np.ndarray(
@@ -261,7 +261,8 @@ class SRecorder:
         )
 
         image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
-        for bbox, rect, id, ratio in zip(bounding_boxes, rects, ids, overlap_ratios):
+        for bbox, rect, id, ratio, physical_param in zip(bounding_boxes, rects, ids, overlap_ratios, physical_params):
+
             if ratio < 0:
                 continue
             points = [(int(bbox[i, 0]), int(bbox[i, 1])) for i in range(8)]
@@ -273,6 +274,7 @@ class SRecorder:
                      (0, 255, 0), (0, 255, 0), (0, 255, 0), (0, 255, 0),
                      (0, 0, 255), (0, 0, 255), (0, 0, 255), (0, 0, 255)]
 
+            camera.update_gt_data(frame_number, id, rect, bbox, ratio, physical_param)
             # draw 3D bbox
             if self.flag_show_3D_bbox:
                 for i in range(len(pairs)):
@@ -300,12 +302,16 @@ class SRecorder:
         #             1, (0, 255, 0), 2)
 
 
-        save_path = os.path.join(self.save_root, camera_tag)
+        save_img_path = os.path.join(self.save_root, camera_tag)
+        save_gt_path = os.path.join(self.save_root, "gt")
+        if not os.path.exists(save_img_path):
+            os.makedirs(save_img_path)
 
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+        if not os.path.exists(save_gt_path):
+            os.makedirs(save_gt_path)
 
-        cv2.imwrite(os.path.join(save_path, '{}.jpg'.format(frame_number)), image)
+        cv2.imwrite(os.path.join(save_img_path, '{}.jpg'.format(frame_number)), image)
+        camera.save_gt_data(os.path.join(save_gt_path, "{}.csv".format(camera_tag)))
         return image
 
 

@@ -6,6 +6,7 @@ import cv2
 import json
 from .svehicle import SVehicle
 from collections import OrderedDict
+import pandas as pd
 
 
 class SCamera:
@@ -16,6 +17,23 @@ class SCamera:
         self.queue = None
         self.queue_depth = None
         self.display = None
+        self.gt_data = pd.DataFrame(columns=["frame_idx", "id",     # frame index and the object's id
+                                             "l", 't', 'r', 'b',    # object rectangles
+                                             "pt0_x", "pt0_y",      # 8 corner of the object bbox
+                                             "pt1_x", "pt1_y",
+                                             "pt2_x", "pt2_y",
+                                             "pt3_x", "pt3_y",
+                                             "pt4_x", "pt4_y",
+                                             "pt5_x", "pt5_y",
+                                             "pt6_x", "pt6_y",
+                                             "pt7_x", "pt7_y",
+                                             "physical_x", "physical_y", "physical_z",
+                                             "overlap",             # the ratio of overlap
+                                             "camera_w", "camera_h", "camera_fov",  # camera parameters
+                                             "camera_x", "camera_y", "camera_z",
+                                             "camera_pitch", "camera_yaw", "camera_roll",
+                                             "cloudyness", "precipitation", "sun_altitude_angle", "wind_intensity"]   # weather
+                                    )
 
     def get_bounding_boxes(self, vehicles):
         """
@@ -31,7 +49,12 @@ class SCamera:
         bounding_boxes = [bounding_boxes[i] for i in indexes]
         rects = SVehicle.get_rects(bounding_boxes)
         ids = [vehicles[i].id for i in indexes]
-        return bounding_boxes, rects, ids
+        physical_params = [self.get_physical_params(vehicles[i]) for i in indexes]
+        return bounding_boxes, rects, ids, physical_params
+
+    def get_physical_params(self, vehicle):
+        extent = vehicle.bounding_box.extent
+        return (extent.x*2, extent.y*2, extent.z*2)
 
     def get_bounding_box(self, vehicle):
         """
@@ -322,5 +345,34 @@ class SCamera:
         with open(save_path, 'a+') as f:
             js = json.dump(param, f)
             f.write("\n")
-            # f.write(js)
 
+
+    def update_gt_data(self, frame_idx, id, rect, bbox, ratio, physical_param):
+        """
+        Update current ground truth data
+        :param frame_idx: frame index
+        :param id: object id
+        :param rect: object rectangle
+        :param bbox: object 8 3D bounding box
+        :param ratio: overlapped ratio
+        :return: None
+        """
+        t = self.camera.get_transform()
+        l = t.location
+        r = t.rotation
+        w = self.camera.get_world().get_weather()
+
+        self.gt_data = self.gt_data.append(pd.Series([
+            frame_idx, id,
+            rect[0, 0], rect[0, 1], rect[1, 0], rect[1, 1],
+            *tuple([bbox[i//2, i%2] for i in range(16)]),
+            *physical_param,
+            ratio,
+            self.width, self.height, self.fov,
+            l.x, l.y, l.z,
+            r.pitch, r.roll, r.yaw,
+            w.cloudyness, w.precipitation, w.sun_altitude_angle, w.wind_intensity
+        ], index=self.gt_data.columns), ignore_index=True)
+
+    def save_gt_data(self, file_path):
+        self.gt_data.to_csv(file_path, index=False)
