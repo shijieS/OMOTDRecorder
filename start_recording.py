@@ -59,5 +59,6 @@ def start_recording(config_name):
             )
             recorder.run()
 
+
 if __name__ == "__main__":
     start_recording(args.config_name)

@@ -1,2 +1,4 @@
 .idea
 data_recorders
+config/__pycache__/
+recording_utils/__pycache__

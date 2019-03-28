@@ -3,7 +3,9 @@ import numpy as np
 import queue
 import pygame
 import cv2
+import json
 from .svehicle import SVehicle
+from collections import OrderedDict
 
 
 class SCamera:
@@ -70,6 +72,25 @@ class SCamera:
         world_sensor_matrix = np.linalg.inv(sensor_world_matrix)
         sensor_cords = np.dot(world_sensor_matrix, cords)
         return sensor_cords
+
+    def _sensor_to_world(self, cords):
+        sensor_world_matrix = SCamera.get_matrix(self.camera.get_transform())
+        world_cords = np.dot(sensor_world_matrix, cords)
+        return world_cords
+
+    def _apply_transform(self, x, y, z, pitch, roll, yaw):
+        t = self.camera.get_transform()
+        l = t.location
+        r = t.rotation
+        world_vec = self._sensor_to_world(np.array([[x, y, z, 1]]).T)
+
+        self.camera.set_transform(carla.Transform(
+            carla.Location(world_vec[0, 0], world_vec[1, 0], world_vec[2, 0]),
+            carla.Rotation(pitch=r.pitch+pitch*10,
+                           roll=r.roll+roll*10,
+                           yaw=r.yaw+yaw*10)
+        ))
+
 
     @staticmethod
     def _vehicle_to_world(cords, vehicle):
@@ -157,6 +178,10 @@ class SCamera:
                     break
             return image
 
+    def reset_depth_camera(self):
+        self.camera_depth.set_transform(
+            self.camera.get_transform()
+        )
 
     def get_image_depth(self, gt_frame_num=None):
         """
@@ -254,4 +279,48 @@ class SCamera:
         image_surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         self.display.blit(image_surface, (0, 0))
 
+    # Camera Control Part
+    control_dict = {
+        'w': np.array([0.1, 0, 0]),
+        's': np.array([-0.1, 0, 0]),
+        'a': np.array([0, -0.1, 0]),
+        'd': np.array([0, 0.1, 0]),
+        'q': np.array([0, 0, 0.1]),
+        'e': np.array([0, 0, -0.1]),
+
+        'i': np.array([0.1, 0, 0]),
+        'k': np.array([-0.1, 0, 0]),
+        'j': np.array([0, 0, -0.1]),
+        'l': np.array([0, 0, 0.1]),
+        'u': np.array([0, -0.1, 0]),
+        'o': np.array([0, 0.1, 0])
+    }
+    def on_key_w_s_a_d(self, key, scale=30):
+        # Control the camera
+        if key in ['w', 's', 'a', 'd', 'q', 'e']:
+            self._apply_transform(*tuple(SCamera.control_dict[key]*scale), 0, 0, 0)
+        else:
+            self._apply_transform(0, 0, 0, *SCamera.control_dict[key])
+
+    def save_transform(self, save_path):
+        t = self.camera.get_transform()
+        l = t.location
+        r = t.rotation
+
+        param = OrderedDict([
+            ('width', self.width),
+            ('height', self.height),
+            ('x', l.x),
+            ('y', l.y),
+            ('z', l.z),
+            ('fov', float(self.camera.attributes['fov'])),
+            ('roll', r.roll),
+            ('yaw', r.yaw),
+            ('pitch', r.pitch)
+        ])
+
+        with open(save_path, 'a+') as f:
+            js = json.dump(param, f)
+            f.write("\n")
+            # f.write(js)
 
