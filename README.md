@@ -6,6 +6,13 @@
 - \>= Ubuntu 16.0
 
 ## Usage
+### Open
+```shell
+cd <CARLA Project>
+source activate CARLA
+./CarlaUE4.sh
+```
+
 ### Short Cut Key
 | Key    | Action                              |
 |--------|-------------------------------------|
