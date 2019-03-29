@@ -6,7 +6,29 @@
 - \>= Ubuntu 16.0
 
 ## Usage
+### Short Cut Key
+| Key    | Action                              |
+|--------|-------------------------------------|
+| Esc    | Quit                                |
+| 1      | Start Image Processing              |
+| 2      | Show 3D Bounding Boxes in the Image |
+| 3      | Show Rectangle in the Image         |
+| 4      | Show Vehicle Labels                 |
+| w      | Move Forward                        |
+| s      | Move Backward                       |
+| a      | Move Left                           |
+| d      | Move Right                          |
+| q      | Move Up                             |
+| e      | Move Down                           |
+| i      | Pitch Up                            |
+| k      | Pitch Down                          |
+| j      | Roll Left                           |
+| l      | Roll Right                          |
+| u      | Yaw Left                            |
+| p      | Yaw Right                           |
+| Insert | Save Camera Parameter               |
 
+### Configure Script
 The following is the configure script:
 
 ```json
