@@ -1,3 +1,10 @@
+#  Copyright (c) 2019. ShiJie Sun at the Chang'an University
+#  This work is licensed under the terms of the MIT license.
+#  For a copy, see <https://opensource.org/licenses/MIT>.
+#  Author: shijie Sun
+#  Email: shijieSun@chd.edu.cn
+#  Github: www.github.com/shijieS
+
 import carla
 import numpy as np
 import queue
@@ -28,7 +35,10 @@ class SCamera:
                                              "pt6_x", "pt6_y",
                                              "pt7_x", "pt7_y",
                                              "physical_x", "physical_y", "physical_z",
-                                             "overlap",             # the ratio of overlap
+                                             "overlap",  # the ratio of overlap
+                                             "velocity_x", "velocity_y", "velocity_z",              # velocity
+                                             "acceleration_x", "acceleration_y", "acceleration_z",  # acceleration
+                                             "number_of_wheels",
                                              "camera_w", "camera_h", "camera_fov",  # camera parameters
                                              "camera_x", "camera_y", "camera_z",
                                              "camera_pitch", "camera_yaw", "camera_roll",
@@ -50,7 +60,7 @@ class SCamera:
         rects = SVehicle.get_rects(bounding_boxes)
         ids = [vehicles[i].id for i in indexes]
         physical_params = [self.get_physical_params(vehicles[i]) for i in indexes]
-        return bounding_boxes, rects, ids, physical_params
+        return bounding_boxes, rects, ids, physical_params, indexes
 
     def get_physical_params(self, vehicle):
         extent = vehicle.bounding_box.extent
@@ -347,7 +357,7 @@ class SCamera:
             f.write("\n")
 
 
-    def update_gt_data(self, frame_idx, id, rect, bbox, ratio, physical_param):
+    def update_gt_data(self, frame_idx, id, rect, bbox, ratio, physical_param, vehicle):
         """
         Update current ground truth data
         :param frame_idx: frame index
@@ -361,13 +371,18 @@ class SCamera:
         l = t.location
         r = t.rotation
         w = self.camera.get_world().get_weather()
-
+        velocity = vehicle.get_angular_velocity()
+        acceleration = vehicle.get_acceleration()
+        number_of_wheels = int(vehicle.attributes["number_of_wheels"])
         self.gt_data = self.gt_data.append(pd.Series([
             frame_idx, id,
             rect[0, 0], rect[0, 1], rect[1, 0], rect[1, 1],
             *tuple([bbox[i//2, i%2] for i in range(16)]),
             *physical_param,
             ratio,
+            velocity.x, velocity.y, velocity.z,
+            acceleration.x, acceleration.y, acceleration.z,
+            number_of_wheels,
             self.width, self.height, self.fov,
             l.x, l.y, l.z,
             r.pitch, r.roll, r.yaw,

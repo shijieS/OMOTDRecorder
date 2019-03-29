@@ -1,3 +1,10 @@
+#  Copyright (c) 2019. ShiJie Sun at the Chang'an University
+#  This work is licensed under the terms of the MIT license.
+#  For a copy, see <https://opensource.org/licenses/MIT>.
+#  Author: shijie Sun
+#  Email: shijieSun@chd.edu.cn
+#  Github: www.github.com/shijieS
+
 from recording_utils import SRecorder
 import argparse
 from config import Configure
@@ -7,8 +14,9 @@ argparser = argparse.ArgumentParser(
 
 argparser.add_argument(
         '--config_name',
-        default='town1_cross.json',
+        # default='town5_cross.json',
         # default='town1.json',
+        default='town3_Test.json',
         help='configure file name')
 
 args = argparser.parse_args()

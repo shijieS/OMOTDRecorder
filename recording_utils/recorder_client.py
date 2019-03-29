@@ -1,3 +1,10 @@
+#  Copyright (c) 2019. ShiJie Sun at the Chang'an University
+#  This work is licensed under the terms of the MIT license.
+#  For a copy, see <https://opensource.org/licenses/MIT>.
+#  Author: shijie Sun
+#  Email: shijieSun@chd.edu.cn
+#  Github: www.github.com/shijieS
+
 import os
 import carla
 import pygame
@@ -251,7 +258,7 @@ class SRecorder:
         camera = self.camera_dict[camera_tag]
         frame_number = image.frame_number
         all_vehicles = self._get_all_vechicles()
-        bounding_boxes, rects, ids, physical_params = camera.get_bounding_boxes(all_vehicles)
+        bounding_boxes, rects, ids, physical_params, vehicle_indexes = camera.get_bounding_boxes(all_vehicles)
         overlap_ratios = camera.get_overlap_ratio(rects, image_depth)
 
         image = np.ndarray(
@@ -261,7 +268,7 @@ class SRecorder:
         )
 
         image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
-        for bbox, rect, id, ratio, physical_param in zip(bounding_boxes, rects, ids, overlap_ratios, physical_params):
+        for bbox, rect, id, ratio, physical_param, index in zip(bounding_boxes, rects, ids, overlap_ratios, physical_params, vehicle_indexes):
 
             if ratio < 0:
                 continue
@@ -274,7 +281,7 @@ class SRecorder:
                      (0, 255, 0), (0, 255, 0), (0, 255, 0), (0, 255, 0),
                      (0, 0, 255), (0, 0, 255), (0, 0, 255), (0, 0, 255)]
 
-            camera.update_gt_data(frame_number, id, rect, bbox, ratio, physical_param)
+            camera.update_gt_data(frame_number, id, rect, bbox, ratio, physical_param, all_vehicles[index])
             # draw 3D bbox
             if self.flag_show_3D_bbox:
                 for i in range(len(pairs)):
@@ -302,7 +309,7 @@ class SRecorder:
         #             1, (0, 255, 0), 2)
 
 
-        save_img_path = os.path.join(self.save_root, camera_tag)
+        save_img_path = os.path.join(os.path.join(self.save_root, 'img'), camera_tag)
         save_gt_path = os.path.join(self.save_root, "gt")
         if not os.path.exists(save_img_path):
             os.makedirs(save_img_path)
