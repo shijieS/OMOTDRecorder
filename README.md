@@ -28,6 +28,7 @@
 | u      | Yaw Left                            |
 | p      | Yaw Right                           |
 | Insert | Save Camera Parameter               |
+| Home   | Update the Camera Level             |
 
 ### Configure Script
 The following is the configure script:
