@@ -4,6 +4,6 @@
   "host": "127.0.0.1",
   "port": 2000,
   "cameras": {
-    "Town3_Test_00": {"width": 1920, "height": 1080, "x": -78.70, "y": 8.3, "z": 39, "fov": 90.0, "roll": 449.99, "yaw": 260, "pitch": -79.99, "max_record_frame": 10000}
+    "Town3_Test_00": {"width": 1920, "height": 1080, "x": -78.70, "y": 8.3, "z": 39, "fov": 90.0, "roll": 0, "yaw": 0, "pitch": 0, "max_record_frame": 10000}
   }
 }

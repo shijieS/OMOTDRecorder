@@ -349,7 +349,8 @@ class SCamera:
             ('fov', float(self.camera.attributes['fov'])),
             ('roll', r.roll),
             ('yaw', r.yaw),
-            ('pitch', r.pitch)
+            ('pitch', r.pitch),
+            ('max_record_frame', 10000)
         ])
 
         with open(save_path, 'a+') as f:
