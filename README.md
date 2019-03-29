@@ -10,7 +10,7 @@
 | Key    | Action                              |
 |--------|-------------------------------------|
 | Esc    | Quit                                |
-| Tab    | Switch the Cameras                   |
+| Tab    | Switch the Cameras                  |
 | 1      | Start Image Processing              |
 | 2      | Show 3D Bounding Boxes in the Image |
 | 3      | Show Rectangle in the Image         |

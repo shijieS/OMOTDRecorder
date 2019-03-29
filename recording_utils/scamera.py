@@ -44,6 +44,7 @@ class SCamera:
                                              "camera_pitch", "camera_yaw", "camera_roll",
                                              "cloudyness", "precipitation", "sun_altitude_angle", "wind_intensity"]   # weather
                                     )
+        self.insert_camera_index = 0
 
     def get_bounding_boxes(self, vehicles):
         """
@@ -335,12 +336,13 @@ class SCamera:
         else:
             self._apply_transform(0, 0, 0, *SCamera.control_dict[key])
 
-    def save_transform(self, save_path):
+    def save_transform(self, save_path, level_str):
         t = self.camera.get_transform()
         l = t.location
         r = t.rotation
 
-        param = OrderedDict([
+        param = OrderedDict({
+            level_str+"_Camera_{}".format(self.insert_camera_index): OrderedDict([
             ('width', self.width),
             ('height', self.height),
             ('x', l.x),
@@ -351,7 +353,8 @@ class SCamera:
             ('yaw', r.yaw),
             ('pitch', r.pitch),
             ('max_record_frame', 10000)
-        ])
+        ])})
+        self.insert_camera_index += 1
 
         with open(save_path, 'a+') as f:
             js = json.dump(param, f)

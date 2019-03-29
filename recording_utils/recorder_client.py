@@ -48,6 +48,9 @@ class SRecorder:
         self.flag_image_process = False
 
         self.move_scale = 30
+        self.camera_level_str = ['Easy', "Middle", "Hard"]
+        self.current_select_level = 0
+        self.log_display_str = ""
 
     def _get_listen_camera(self, camera_tag="camera0"):
         def listen(image):
@@ -197,7 +200,9 @@ class SRecorder:
                     self._get_current_camera().save_transform(
                         os.path.join(
                             self.save_root,
-                            "{}.json".format(list(self.camera_dict.keys())[self.display_camera])))
+                            "{}.json".format(list(self.camera_dict.keys())[self.display_camera])), self.camera_level_str[self.current_select_level])
+                elif event.key == pygame.K_HOME:
+                    self.current_select_level = (self.current_select_level + 1) % len(self.camera_level_str)
             elif event.type == pygame.KEYDOWN:
                 if not self.flag_image_process:
                     if event.key == pygame.K_w:
@@ -370,6 +375,10 @@ class SRecorder:
                 camera.display.blit(text_surface, (8, 10))
                 pygame.display.flip()
 
+                # show log str
+                self.log_display_str = "Level: {}".format(self.camera_level_str[self.current_select_level])
+                self.display_log_str(camera, font)
+
                 continue
 
             for i, k in enumerate(self.camera_dict.keys()):
@@ -389,6 +398,11 @@ class SRecorder:
                     camera.display.blit(text_surface, (8, 10))
                     pygame.display.flip()
 
+
+    def display_log_str(self, camera, font):
+        text_surface = font.render(self.log_display_str, True, (255, 255, 255))
+        camera.display.blit(text_surface, (8, 50))
+        pygame.display.flip()
 
     def clear(self):
         self.client.apply_batch([carla.command.DestroyActor(x.id) for x in self.actor_list])
