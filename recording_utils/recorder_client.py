@@ -17,10 +17,15 @@ except ImportError:
 from recording_utils import SCamera
 import random
 from collections import OrderedDict
+import time
+import weakref
+import math
 
 
 class SRecorder:
     def __init__(self, host='localhost', port=2000,
+                 weather_name="Clear",
+                 vehicle_num=100,
                  save_root='./recorders/'):
         """
         This recorder is used for recording the detected boxes in RGB camera
@@ -38,6 +43,7 @@ class SRecorder:
         self.blueprint_library = self.world.get_blueprint_library()
 
         self.actor_list = []
+        self.vehicle_list = []
         self.camera_dict = OrderedDict()
         self.display_camera = 0
         self.current_camera = None
@@ -45,54 +51,41 @@ class SRecorder:
         self.flag_show_3D_bbox = False
         self.flag_show_rect = False
         self.flag_show_label = False
-        self.flag_image_process = False
+        self.flag_image_process = True
+
+        # Set the yellow light longer considering the traffic jam
+        all_traffic_ligts = self.world.get_actors().filter('*.traffic_light')
+        for tl in all_traffic_ligts:
+            tl.set_yellow_time(5)
+            tl.set_green_time(7)
+
+        for s in self.world.get_actors().filter('*.stop'):
+            s.destroy()
 
         self.move_scale = 30
         self.camera_level_str = ['Easy', "Middle", "Hard"]
         self.current_select_level = 0
         self.log_display_str = ""
 
-    def _get_listen_camera(self, camera_tag="camera0"):
-        def listen(image):
-            frame_number = image.frame_number
+        # get 3 types of weather: Clear, Cloudy, Rain
+        self.weather_conditions = {
+            "Clear": [x for x in dir(carla.WeatherParameters) if 'Clear' in x],
+            "Cloudy": [x for x in dir(carla.WeatherParameters) if 'Cloudy' in x],
+            "Rain": [x for x in dir(carla.WeatherParameters) if 'Rain' in x]
+        }
 
-            self.world.wait_for_tick()
+        self.weather_name = weather_name
+        self.vehicle_num = vehicle_num
+        print("start recording {} with {} vehicles spawned >>>>>".format(self.weather_name, self.vehicle_num))
+        self.change_weather(self.weather_name)
+        self.spaw_vehicles(self.vehicle_num)
 
-            all_vehicles = self._get_all_vechicles()
-            camera = self.camera_dict[camera_tag]
-            bounding_boxes = camera.get_bounding_boxes(all_vehicles)
-
-            image = np.ndarray(
-                shape=(image.height, image.width, 4),
-                dtype=np.uint8,
-                buffer=image.raw_data
-            )
-
-            image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
-            for bbox in bounding_boxes:
-                points = [(int(bbox[i, 0]), int(bbox[i, 1])) for i in range(8)]
-
-                pairs = [[0, 1], [1, 2], [2, 3], [3, 0],
-                         [4, 5], [5, 6], [6, 7], [7, 4],
-                         [0, 4], [1, 5], [2, 6], [3, 7]]
-                color = [(255, 0, 0), (255, 0, 0), (255, 0, 0), (255, 0, 0),
-                         (0, 255, 0), (0, 255, 0), (0, 255, 0), (0, 255, 0),
-                         (0, 0, 255), (0, 0, 255), (0, 0, 255), (0, 0, 255)]
-
-                for i in range(len(pairs)):
-                    cv2.line(image, points[pairs[i][0]], points[pairs[i][1]], color[i])
-
-            cv2.putText(image, str(frame_number),
-                        (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
-                        1, (0, 255, 0), 2)
-            save_path = os.path.join(self.save_root, camera_tag)
-
-            if not os.path.exists(save_path):
-                os.makedirs(save_path)
-
-            cv2.imwrite(os.path.join(save_path, '{}.jpg'.format(frame_number)), image)
-
-        return listen
+    def random_get_weather(self, name):
+        self.weather_name = name
+        selection = list(range(1, len(self.weather_conditions[name])))
+        np.random.shuffle(selection)
+        weather_str = self.weather_conditions[name][selection[0]]
+        return getattr(carla.WeatherParameters, weather_str)
 
     def _get_all_vechicles(self):
         all_actors = self.world.get_actors()
@@ -313,9 +306,21 @@ class SRecorder:
         #             (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
         #             1, (0, 255, 0), 2)
 
+        difficulty_level = ""
+        for s in self.camera_level_str:
+            if s in camera_tag:
+                difficulty_level = s
+                break
 
-        save_img_path = os.path.join(os.path.join(self.save_root, 'img'), camera_tag)
-        save_gt_path = os.path.join(self.save_root, "gt")
+        # current_camera_tag = camera_tag
+        # if len(difficulty_level) > 0:
+        #     current_save_root = os.path.join(current_save_root, difficulty_level)
+        #     current_camera_tag = camera_tag[len(difficulty_level)+1:]
+        current_save_root = os.path.join(self.save_root, self.weather_name)
+        current_save_root = os.path.join(current_save_root, "{}".format(self.vehicle_num))
+
+        save_img_path = os.path.join(os.path.join(current_save_root, 'img'), camera_tag)
+        save_gt_path = os.path.join(current_save_root, "gt")
         if not os.path.exists(save_img_path):
             os.makedirs(save_img_path)
 
@@ -345,6 +350,10 @@ class SRecorder:
 
         current_record_frame = 0
         while current_record_frame < self.max_record_frame:
+            # don't know why, but it works to activate the stopping vehicles.
+            for v in self.world.get_actors().filter("vehicle.*"):
+                v.set_autopilot(True)
+
             current_record_frame += 1
             if self.process_event():
                 break
@@ -404,8 +413,90 @@ class SRecorder:
         camera.display.blit(text_surface, (8, 50))
         pygame.display.flip()
 
+    def get_recommended_colors(self):
+        return ['{},{},{}'.format(random.randint(1, 255), random.randint(1, 255), random.randint(1, 255)) for _ in range(30)]
+
+    def can_spawn_vehicle(self, transform):
+        l = transform.location
+        distance = []
+        for v in self.vehicle_list:
+            m = v.get_transform().location
+            distance += [math.sqrt((l.x-m.x)**2+(l.y-m.y)**2+(l.z-m.z)**2)]
+        if len(distance) == 0 or np.min(distance) > 20:
+            return True
+        return False
+
+    def try_spawn_random_vehicle_at(self, transform, blueprints):
+        blueprint = random.choice(blueprints)
+        if blueprint.has_attribute('color'):
+            color = random.choice(blueprint.get_attribute('color').recommended_values*5+self.get_recommended_colors())
+            blueprint.set_attribute('color', color)
+        blueprint.set_attribute('role_name', 'autopilot')
+
+        if self.can_spawn_vehicle(transform):
+            vehicle = self.world.try_spawn_actor(blueprint, transform)
+            if vehicle is not None:
+                self.vehicle_list.append(vehicle)
+                vehicle.set_autopilot()
+                # print('spawned %r at %s' % (vehicle.type_id, transform.location))
+                return True
+        return False
+
+    def spaw_vehicles(self, count, is_safe=True, delay=0.001):
+        self.vehicle_num = count
+        blueprints = self.world.get_blueprint_library().filter('vehicle.*')
+        if is_safe:
+            blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) >= 4]
+            blueprints = [x for x in blueprints if not x.id.endswith('isetta')]
+
+        spawn_points = list(self.world.get_map().get_spawn_points())
+        random.shuffle(spawn_points)
+
+        for spawn_point in spawn_points:
+            if self.try_spawn_random_vehicle_at(spawn_point, blueprints):
+                count -= 1
+            if count <= 0:
+                break
+        while count > 0:
+            # time.sleep(delay)
+            if self.try_spawn_random_vehicle_at(random.choice(spawn_points), blueprints):
+                count -= 1
+
+    def is_destoried(self, id):
+        return self.world.get_actors().find(1) is None
+
+    def clear_vehicles(self):
+        self.clear_actors(self.vehicle_list)
+
+    def change_weather(self, name):
+        """
+        Change the weather by the name (support "Rain, "Cloudy", "Clear")
+        :param name: A weather selected from "Rain, "Cloudy" or "Clear".
+        :return: None
+        """
+        self.world.set_weather(self.random_get_weather(name))
+
+    def clear_actors(self, actor_list):
+        self.client.apply_batch([carla.command.DestroyActor(x.id) for x in actor_list if x is not None])
+        time.sleep(2)
+
+        count = np.sum([self.is_destoried(a.id) for a in actor_list])
+        while count > 0:
+            self.client.apply_batch([carla.command.DestroyActor(x.id) for x in actor_list if not self.is_destoried(x)])
+            time.sleep(2)
+            count = np.sum([self.is_destoried(a.id) for a in actor_list])
+        actor_list.clear()
+
+
+
     def clear(self):
-        self.client.apply_batch([carla.command.DestroyActor(x.id) for x in self.actor_list])
+        print("how dare you clear me!>>>>>>>>>>>>>>>>>>>>>..")
+        for c in self.camera_dict.values():
+            c.stop()
+
+        self.clear_actors(self.actor_list)
+        self.clear_actors(self.vehicle_list)
+        self.camera_dict.clear()
 
     def run(self):
         try:

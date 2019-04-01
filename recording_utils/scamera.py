@@ -395,3 +395,8 @@ class SCamera:
 
     def save_gt_data(self, file_path):
         self.gt_data.to_csv(file_path, index=False)
+
+    def stop(self):
+        self.camera.stop()
+        self.camera_depth.stop()
+        pygame.display.quit()
