@@ -14,15 +14,32 @@ argparser = argparse.ArgumentParser(
 
 argparser.add_argument(
         '--config_name',
-        # default='town5_cross.json',
-        # default='town1.json',
+        # default='town5_Test.json',
         default='town3_Test.json',
-        # default='Town3_camera_hard.json',
         help='configure file name')
+argparser.add_argument(
+    '--recording_num_scale',
+    default=0.5,
+    type=float,
+    help='the scale of recording frame, default is 0.5, which means 0.5*10000'
+)
+
+argparser.add_argument(
+    '--auto_save',
+    default=True,
+    help='whether show display windows or not'
+)
+
+argparser.add_argument(
+    '--flag_show_windows',
+    default=False,
+    help='whether show display windows or not'
+)
+from tqdm import trange
 
 args = argparser.parse_args()
 
-def start_recording(config_name):
+def start_recording(config_name, recording_num_scale, flag_show_windows, auto_save):
     config = Configure.get_config(config_name)
 
     cameras = config['cameras']
@@ -38,8 +55,12 @@ def start_recording(config_name):
                                  save_root=config['save_root'],
                                  weather_name=cond[0],
                                  vehicle_num=cond[1],
+                                 flag_show_windows=flag_show_windows,
+                                 auto_save=auto_save
                                  )
-            for k in cameras.keys():
+            camera_keys = cameras.keys()
+
+            for _, k in zip(trange(len(cameras)), cameras.keys()):
                 recorder.create_rgb_camera(
                     width=cameras[k]["width"],
                     height=cameras[k]["height"],
@@ -50,7 +71,7 @@ def start_recording(config_name):
                     pitch=cameras[k]["pitch"],
                     yaw=cameras[k]["yaw"],
                     roll=cameras[k]["roll"],
-                    max_record_frame=cameras[k]["max_record_frame"],
+                    max_record_frame=int(cameras[k]["max_record_frame"]*recording_num_scale),
                     camera_tag=k
                 )
             recorder.run()
@@ -62,7 +83,9 @@ def start_recording(config_name):
                                      port=config['port'],
                                      save_root=config['save_root'],
                                      weather_name=cond[0],
-                                     vehicle_num=cond[1]
+                                     vehicle_num=cond[1],
+                                     flag_show_windows=flag_show_windows,
+                                     auto_save=auto_save
                                      )
                 recorder.create_rgb_camera(
                     width=cameras[k]["width"],
@@ -74,11 +97,11 @@ def start_recording(config_name):
                     pitch=cameras[k]["pitch"],
                     yaw=cameras[k]["yaw"],
                     roll=cameras[k]["roll"],
-                    max_record_frame=cameras[k]["max_record_frame"],
+                    max_record_frame=int(cameras[k]["max_record_frame"]*recording_num_scale),
                     camera_tag=k
                 )
                 recorder.run()
 
 
 if __name__ == "__main__":
-    start_recording(args.config_name)
+    start_recording(args.config_name, args.recording_num_scale, args.flag_show_windows, args.auto_save)

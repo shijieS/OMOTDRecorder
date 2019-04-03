@@ -20,13 +20,17 @@ from collections import OrderedDict
 import time
 import weakref
 import math
+import sys
+from tqdm import trange
 
 
 class SRecorder:
     def __init__(self, host='localhost', port=2000,
                  weather_name="Clear",
                  vehicle_num=100,
-                 save_root='./recorders/'):
+                 save_root='./recorders/',
+                 flag_show_windows=False,
+                 auto_save=True):
         """
         This recorder is used for recording the detected boxes in RGB camera
         :param host: host ip
@@ -51,7 +55,8 @@ class SRecorder:
         self.flag_show_3D_bbox = False
         self.flag_show_rect = False
         self.flag_show_label = False
-        self.flag_image_process = True
+        self.flag_image_process = auto_save
+        self.flag_show_windows = flag_show_windows
 
         # Set the yellow light longer considering the traffic jam
         all_traffic_ligts = self.world.get_actors().filter('*.traffic_light')
@@ -121,6 +126,9 @@ class SRecorder:
         :param camera_tag: camera name which also decides the save path
         :return:
         """
+        if max_record_frame == 0:
+            max_record_frame = sys.maxsize
+
         self.max_record_frame=max_record_frame
 
         bp = self.world.get_blueprint_library().find('sensor.camera.rgb')
@@ -142,11 +150,11 @@ class SRecorder:
         )
 
         if actor is None:
-            camera = self.world.try_spawn_actor(bp, transform)
-            camera_depth = self.world.try_spawn_actor(bpd, transform)
+            camera = self.spawn_actor(bp, transform)
+            camera_depth = self.spawn_actor(bpd, transform)
         else:
-            camera = self.world.try_spawn_actor(bp, transform, attach_to=actor)
-            camera_depth = self.world.try_spawn_actor(bpd, transform, attach_to=actor)
+            camera = self.spawn_actor(bp, transform, attach_to=actor)
+            camera_depth = self.spawn_actor(bpd, transform, attach_to=actor)
 
         # if not listen_method:
         #     camera.listen(self._get_listen_camera(camera_tag))
@@ -156,6 +164,16 @@ class SRecorder:
         self.camera_dict[camera_tag] = SCamera(camera, camera_depth)
 
         return camera
+
+    def spawn_actor(self, bp, transform, attach_to=None):
+        actor = None
+        while actor is None:
+            time.sleep(0.1)
+            if attach_to is None:
+                actor = self.world.try_spawn_actor(bp, transform)
+            else:
+                actor = self.world.try_spawn_actor(bp, transform, attach_to=attach_to)
+        return actor
 
     def set_synchronous_mode(self, synchronous_mode):
         """
@@ -224,6 +242,13 @@ class SRecorder:
                     elif event.key == pygame.K_o:
                         self._get_current_camera().on_key_w_s_a_d('o', self.move_scale)
 
+                    # change the weather
+                    elif event.key == pygame.K_c:
+                        all_weather_name = list(self.weather_conditions.keys())
+                        current_index = all_weather_name.index(self.weather_name)
+                        current_index = (current_index+1) / len(all_weather_name)
+                        self.change_weather(all_weather_name[current_index])
+
         return False
 
     @staticmethod
@@ -246,7 +271,7 @@ class SRecorder:
 
         return self.current_camera
 
-    def save_label_vehicles(self, camera_tag, image, image_depth):
+    def save_label_vehicles(self, camera_tag, image, image_depth, flag_save_gt_data=False):
         """
         Label vehicles and save the labeled images into the save_root directories
         :param camera_tag: the spedified camera tag
@@ -328,7 +353,8 @@ class SRecorder:
             os.makedirs(save_gt_path)
 
         cv2.imwrite(os.path.join(save_img_path, '{}.jpg'.format(frame_number)), image)
-        camera.save_gt_data(os.path.join(save_gt_path, "{}.csv".format(camera_tag)))
+        if flag_save_gt_data:
+            camera.save_gt_data(os.path.join(save_gt_path, "{}.csv".format(camera_tag)))
         return image
 
 
@@ -336,7 +362,6 @@ class SRecorder:
         pygame.init()
         # key press hold on
         pygame.key.set_repeat(10)
-
 
         clock = pygame.time.Clock()
 
@@ -346,15 +371,15 @@ class SRecorder:
 
         for k in self.camera_dict.keys():
             self.camera_dict[k].add_listen_queue()
-            self.camera_dict[k].add_display()
+            if self.flag_show_windows:
+                self.camera_dict[k].add_display()
 
         current_record_frame = 0
-        while current_record_frame < self.max_record_frame:
+        for current_record_frame in trange(self.max_record_frame):
             # don't know why, but it works to activate the stopping vehicles.
             for v in self.world.get_actors().filter("vehicle.*"):
                 v.set_autopilot(True)
 
-            current_record_frame += 1
             if self.process_event():
                 break
 
@@ -369,12 +394,13 @@ class SRecorder:
 
             frame_count = ts.frame_count
 
-            str_camera_parameters = str(self._get_current_camera().camera.get_transform())
-            text_surface = font.render(str_camera_parameters, True, (0, 0, 255))
-            self._get_current_camera().display.blit(text_surface, (8, 30))
-            pygame.display.flip()
+            if self.flag_show_windows:
+                str_camera_parameters = str(self._get_current_camera().camera.get_transform())
+                text_surface = font.render(str_camera_parameters, True, (0, 0, 255))
+                self._get_current_camera().display.blit(text_surface, (8, 30))
+                pygame.display.flip()
 
-            if not self.flag_image_process:
+            if self.flag_show_windows and not self.flag_image_process:
                 camera = self._get_current_camera()
                 image = camera.get_image(frame_count)
                 camera.display_image(image)
@@ -390,6 +416,11 @@ class SRecorder:
 
                 continue
 
+            if current_record_frame % 500 == 0 or self.max_record_frame - current_record_frame < 3:
+                flag_save_gt_data = True
+            else:
+                flag_save_gt_data = False
+
             for i, k in enumerate(self.camera_dict.keys()):
                 camera = self.camera_dict[k]
                 image = camera.get_image(frame_count)
@@ -398,8 +429,8 @@ class SRecorder:
 
                 image_depth = camera.get_image_depth(frame_count)
 
-                image = self.save_label_vehicles(k, image, image_depth)
-                if i == self.display_camera:
+                image = self.save_label_vehicles(k, image, image_depth, flag_save_gt_data)
+                if self.flag_show_windows and i == self.display_camera:
                     camera.display_cv_image(image)
                     show_str = "Current Camera: {}   |   ".format(k) + \
                                '% 5d FPS'  % clock.get_fps() + "   |   Frame: {}".format(frame_count)
