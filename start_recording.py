@@ -9,6 +9,14 @@ from recording_utils import SRecorder
 import argparse
 from config import Configure
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Unsupported value encountered.')
+
 argparser = argparse.ArgumentParser(
         description='Awesome recording script')
 
@@ -27,12 +35,14 @@ argparser.add_argument(
 argparser.add_argument(
     '--auto_save',
     default=True,
+    type=str2bool,
     help='whether show display windows or not'
 )
 
 argparser.add_argument(
     '--flag_show_windows',
     default=False,
+    type=str2bool,
     help='whether show display windows or not'
 )
 from tqdm import trange
@@ -104,4 +114,5 @@ def start_recording(config_name, recording_num_scale, flag_show_windows, auto_sa
 
 
 if __name__ == "__main__":
-    start_recording(args.config_name, args.recording_num_scale, args.flag_show_windows, args.auto_save)
+    start_recording(args.config_name, args.recording_num_scale,
+                    args.flag_show_windows, args.auto_save)
