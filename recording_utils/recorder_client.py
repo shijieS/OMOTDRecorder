@@ -271,7 +271,7 @@ class SRecorder:
 
         return self.current_camera
 
-    def save_label_vehicles(self, camera_tag, image, image_depth, flag_save_gt_data=False):
+    def save_label_vehicles(self, camera_tag, image, image_depth, current_record_frame_index, flag_save_gt_data=False):
         """
         Label vehicles and save the labeled images into the save_root directories
         :param camera_tag: the spedified camera tag
@@ -304,7 +304,7 @@ class SRecorder:
                      (0, 255, 0), (0, 255, 0), (0, 255, 0), (0, 255, 0),
                      (0, 0, 255), (0, 0, 255), (0, 0, 255), (0, 0, 255)]
 
-            camera.update_gt_data(frame_number, id, rect, bbox, ratio, physical_param, all_vehicles[index])
+            camera.update_gt_data(current_record_frame_index, id, rect, bbox, ratio, physical_param, all_vehicles[index])
             # draw 3D bbox
             if self.flag_show_3D_bbox:
                 for i in range(len(pairs)):
@@ -352,7 +352,7 @@ class SRecorder:
         if not os.path.exists(save_gt_path):
             os.makedirs(save_gt_path)
 
-        cv2.imwrite(os.path.join(save_img_path, '{}.jpg'.format(frame_number)), image)
+        cv2.imwrite(os.path.join(save_img_path, '{}.jpg'.format(current_record_frame_index)), image)
         if flag_save_gt_data:
             camera.save_gt_data(os.path.join(save_gt_path, "{}.csv".format(camera_tag)))
         return image
@@ -429,7 +429,7 @@ class SRecorder:
 
                 image_depth = camera.get_image_depth(frame_count)
 
-                image = self.save_label_vehicles(k, image, image_depth, flag_save_gt_data)
+                image = self.save_label_vehicles(k, image, image_depth, current_record_frame, flag_save_gt_data)
                 if self.flag_show_windows and i == self.display_camera:
                     camera.display_cv_image(image)
                     show_str = "Current Camera: {}   |   ".format(k) + \
