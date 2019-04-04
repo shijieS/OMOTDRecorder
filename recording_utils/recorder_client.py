@@ -390,7 +390,7 @@ class SRecorder:
 
             if frame_count is not None:
                 if ts.frame_count != frame_count + 1:
-                    print('frame skip!')
+                    pass
 
             frame_count = ts.frame_count
 
@@ -521,7 +521,7 @@ class SRecorder:
 
 
     def clear(self):
-        print("how dare you clear me!>>>>>>>>>>>>>>>>>>>>>..")
+        print("clear vehicles and cameras >>>>>>>>>>>>>>>>>>>>>..")
         for c in self.camera_dict.values():
             c.stop()
 

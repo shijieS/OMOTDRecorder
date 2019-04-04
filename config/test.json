@@ -4,9 +4,9 @@
   "host": "127.0.0.1",
   "port": 2000,
   "weathers": ["Clear", "Cloudy", "Rain"],
-  "vehicle_num": [100, 170, 230],
+  "vehicle_num": [30, 45, 50],
   "cameras": {
-    "Hard_Town3_Test_00": {"width": 1920, "height": 1080, "x": -78.70, "y": 8.3, "z": 39, "fov": 90.0, "roll": 0, "yaw": 0, "pitch": 0, "max_record_frame": 1000000},
-    "Easy_Camera_Cross1": {"width": 1920, "height": 1080, "x": -79.3550796508789, "y": -0.8948922753334045, "z": 32.788326263427734, "fov": 90.0, "roll": 1.0506457329029217e-05, "yaw": 42.000396728515625, "pitch": -42.999786376953125, "max_record_frame": 1000000}
+    "Hard_Town3_Test_00": {"width": 1920, "height": 1080, "x": -78.70, "y": 8.3, "z": 39, "fov": 90.0, "roll": 0, "yaw": 0, "pitch": 0, "max_record_frame": 10},
+    "Easy_Camera_Cross1": {"width": 1920, "height": 1080, "x": -79.3550796508789, "y": -0.8948922753334045, "z": 32.788326263427734, "fov": 90.0, "roll": 1.0506457329029217e-05, "yaw": 42.000396728515625, "pitch": -42.999786376953125, "max_record_frame": 10}
   }
 }
