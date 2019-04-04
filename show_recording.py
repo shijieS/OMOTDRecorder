@@ -174,4 +174,3 @@ if __name__ == "__main__":
         cv_draw_mult_boxes(frame, bboxes[:, 1:-1])
         cv2.imshow("result", frame)
         cv2.waitKey(0)
-
