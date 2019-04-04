@@ -41,7 +41,7 @@ class SRecorder:
         self.port = port
         self.save_root = save_root
         self.client = carla.Client(self.host, self.port)
-        self.client.set_timeout(2.0)
+        self.client.set_timeout(100.0)
 
         self.world = self.client.get_world()
         self.blueprint_library = self.world.get_blueprint_library()

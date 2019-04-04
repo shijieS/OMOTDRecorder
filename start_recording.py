@@ -44,12 +44,22 @@ argparser.add_argument(
     type=str2bool,
     help='whether show display windows or not'
 )
+
+argparser.add_argument(
+    '--port',
+    default=2000,
+    type=int,
+    help='server port'
+)
+
 from tqdm import trange
 
 args = argparser.parse_args()
 
-def start_recording(config_name, recording_num_scale, flag_show_windows, auto_save):
+def start_recording(config_name, recording_num_scale, flag_show_windows, auto_save, port=None):
     config = Configure.get_config(config_name)
+    if port is None:
+        port = config['port']
 
     cameras = config['cameras']
     vehicle_nums = config['vehicle_num']
@@ -60,7 +70,7 @@ def start_recording(config_name, recording_num_scale, flag_show_windows, auto_sa
     if config["mode"] == "parallel":
         for cond in all_conditions:
             recorder = SRecorder(host=config['host'],
-                                 port=config['port'],
+                                 port=port,
                                  save_root=config['save_root'],
                                  weather_name=cond[0],
                                  vehicle_num=cond[1],
@@ -89,7 +99,7 @@ def start_recording(config_name, recording_num_scale, flag_show_windows, auto_sa
         for cond in all_conditions:
             for k in cameras.keys():
                 recorder = SRecorder(host=config['host'],
-                                     port=config['port'],
+                                     port=port,
                                      save_root=config['save_root'],
                                      weather_name=cond[0],
                                      vehicle_num=cond[1],
@@ -114,4 +124,4 @@ def start_recording(config_name, recording_num_scale, flag_show_windows, auto_sa
 
 if __name__ == "__main__":
     start_recording(args.config_name, args.recording_num_scale,
-                    args.flag_show_windows, args.auto_save)
+                    args.flag_show_windows, args.auto_save, args.port)
