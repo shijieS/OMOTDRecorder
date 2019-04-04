@@ -35,7 +35,7 @@ class SCamera:
                                              "pt6_x", "pt6_y",
                                              "pt7_x", "pt7_y",
                                              "physical_x", "physical_y", "physical_z",
-                                             "overlap",  # the ratio of overlap
+                                             "integrity",  # the integrity ratio
                                              "velocity_x", "velocity_y", "velocity_z",              # velocity
                                              "acceleration_x", "acceleration_y", "acceleration_z",  # acceleration
                                              "number_of_wheels",

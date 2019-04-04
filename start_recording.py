@@ -23,7 +23,8 @@ argparser = argparse.ArgumentParser(
 argparser.add_argument(
         '--config_name',
         # default='town5_Test.json',
-        default='town3_Test.json',
+        # default='town3_Test.json',
+        default='Town04_camera_easy.json',
         help='configure file name')
 argparser.add_argument(
     '--recording_num_scale',
