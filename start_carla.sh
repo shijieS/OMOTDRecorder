@@ -1,7 +1,7 @@
 echo "==================Start Create Simulator=================="
-x-terminal-emulator -e sh -c "export CUDA_VISIBLE_DEVICES=0; cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town02 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2000 -benchmark -fps=30"
-x-terminal-emulator -e sh -c "export CUDA_VISIBLE_DEVICES=1; cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town04 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2010 -benchmark -fps=30"
-x-terminal-emulator -e sh -c "export CUDA_VISIBLE_DEVICES=2; cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town05 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2020 -benchmark -fps=30"
+x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town02 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2000 -benchmark -fps=30"
+x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town04 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2010 -benchmark -fps=30"
+x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town05 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2020 -benchmark -fps=30"
 
 echo "==================Successfully Create Simulator=================="
 echo "==================Wait ....=================="
