@@ -4,7 +4,7 @@
   "port": 2000,
   "save_root": "/home/ssj/Data/github/AwesomeMOTDataset/Dataset/Town01/Hard",
   "weathers": ["Clear", "Cloudy", "Rain"],
-  "vehicle_num": [100, 170, 230],
+  "vehicle_num": [50, 85, 115],
   "cameras": {
     "Hard_Camera_0": {"width": 1920, "height": 1080, "x": 128.4268341064453, "y": 210.99192810058594, "z": 18.94906997680664, "fov": 90.0, "roll": 5.000372886657715, "yaw": -42.00038146972656, "pitch": -43.99959945678711, "max_record_frame": 10000},
     "Hard_Camera_1": {"width": 1920, "height": 1080, "x": 284.7183532714844, "y": 70.21271514892578, "z": 5.996962070465088, "fov": 90.0, "roll": -0.9999998211860657, "yaw": -134.00242614746094, "pitch": -24.999147415161133, "max_record_frame": 10000},
