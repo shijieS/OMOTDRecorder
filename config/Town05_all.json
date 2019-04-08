@@ -2,7 +2,7 @@
   "mode": "parallel",
   "save_root": "/home/ssj/Data/github/AwesomeMOTDataset/Dataset/Town05/All",
   "host": "127.0.0.1",
-  "port": 2000,
+  "port": 2020,
   "weathers": ["Clear", "Cloudy", "Rain"],
   "vehicle_num": [100, 170, 230],
   "cameras": {

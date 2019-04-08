@@ -1,7 +1,7 @@
 echo "==================Start Create Simulator=================="
-x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town02 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2000 -benchmark"
-x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town04 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2010 -benchmark"
-x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town05 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2020 -benchmark"
+x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town02 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2000"
+x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town04 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2010"
+x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town05 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2020"
 
 echo "==================Successfully Create Simulator=================="
 echo "==================Wait ....=================="
