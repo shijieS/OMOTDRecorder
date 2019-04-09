@@ -75,3 +75,6 @@ The following is the configure script:
   }
 }
 ```
+
+### Video Format
+**Xvid**

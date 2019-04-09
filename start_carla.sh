@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 echo "==================Start Create Simulator=================="
 x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town02 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2000"
 x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/CARLA_0.9.4; ./CarlaUE4.sh Town04 -carla-server-timeout=500000ms -quality-level=Epic -carla-port=2010"
