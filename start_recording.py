@@ -52,18 +52,38 @@ argparser.add_argument(
     help='server port'
 )
 
+argparser.add_argument(
+    '--record_weather',
+    nargs='+',
+    default=None,
+    type=str,
+    help='The weather we specified ("Clear", "Cloudy", "Rain"). Default records all the weather'
+)
+
+argparser.add_argument(
+    '--vehicle_num',
+    nargs='+',
+    default=None,
+    type=int,
+    help='The vehicle number we specified (Can be any number). Default records the number provided in the configure file'
+)
+
+
+
 from tqdm import trange
 
 args = argparser.parse_args()
 
-def start_recording(config_name, recording_num_scale, flag_show_windows, auto_save, port=None):
+def start_recording(config_name, recording_num_scale, flag_show_windows, auto_save, port=None, weathers=None, vehicle_nums=None):
     config = Configure.get_config(config_name)
     if port is None:
         port = config['port']
 
     cameras = config['cameras']
-    vehicle_nums = config['vehicle_num']
-    weathers = config['weathers']
+    if vehicle_nums is None:
+        vehicle_nums = config['vehicle_num']
+    if weathers is None:
+        weathers = config['weathers']
 
     all_conditions = [(w, v) for w in weathers for v in vehicle_nums]
 
@@ -123,5 +143,7 @@ def start_recording(config_name, recording_num_scale, flag_show_windows, auto_sa
 
 
 if __name__ == "__main__":
+
     start_recording(args.config_name, args.recording_num_scale,
-                    args.flag_show_windows, args.auto_save, args.port)
+                    args.flag_show_windows, args.auto_save, args.port,
+                    args.record_weather, args.vehicle_num)
