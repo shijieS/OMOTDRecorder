@@ -19,7 +19,7 @@ argparser = argparse.ArgumentParser(
 
 argparser.add_argument(
         '--root_folder',
-        default='/media/ssj/新加卷/temp/h-3',
+        default='/media/ssj/新加卷/temp/e-3',
         help='A root folder contains the gt folder and img folder')
 
 argparser.add_argument(
