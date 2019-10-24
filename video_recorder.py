@@ -14,7 +14,7 @@ argparser = argparse.ArgumentParser(description='Convert Images to Video')
 argparser.add_argument('--root_path', default='/home/ssj/Data/github/AwesomeMOTDataset/Dataset/Town05/All/Clear/100', help='image root path which contains gt and img')
 
 args = argparser.parse_args()
-root_path = "/home/ssj/Data/github/AwesomeMOTDataset/Dataset/Town05/All/Clear/100"
+# root_path = "/home/ssj/Data/github/AwesomeMOTDataset/Dataset/Town05/All/Clear/100"
 
 
 def start_convert(root_path):
@@ -26,7 +26,7 @@ def start_convert(root_path):
         base_name = os.path.basename(image_path)
         video_path = os.path.join(root_path, "{}.avi".format(base_name))
         vw = cv2.VideoWriter(video_path, fourcc, 30, (1920, 1080))
-        for i in trange(5000):
+        for i in trange(3000):
             img = cv2.imread(os.path.join(image_path, "{}.jpg".format(i)))
             if img is None:
                 raise("Epty frame!!!!!")

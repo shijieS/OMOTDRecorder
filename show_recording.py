@@ -11,30 +11,46 @@ import os
 import glob
 import numpy as np
 import cv2
+from recording_utils import VideoCaptureAsync, cv_draw_mult_boxes, SimplerTracker
+import tqdm
 
 argparser = argparse.ArgumentParser(
         description='Awesome showing recording data script')
 
 argparser.add_argument(
         '--root_folder',
-        default='/home/ssj/Data/github/AwesomeMOTDataset/Dataset/Town04/Easy/Clear/100',
+        default='/media/ssj/新加卷/temp/h-3',
         help='A root folder contains the gt folder and img folder')
+
+argparser.add_argument(
+        '--is_video',
+        default=True,
+        help='reading from video or from image folders')
 
 args = argparser.parse_args()
 
 class SingleRecordingData:
-    def __init__(self, csv_file_path, image_folder, base_name, min_integrity):
+    def __init__(self, csv_file_path, file, base_name, min_integrity, is_video=False):
+        self.is_video = is_video
         self.csv_file_path = csv_file_path
-        self.image_folder = image_folder
         self.label_data = pd.read_csv(csv_file_path, index_col=False)
-
-        self.bboxes = self.label_data.loc[:, ['frame_idx', 'id', 'l', 't', 'r', 'b', 'integrity']]
+        self.bboxes = self.label_data.loc[:, ['frame_idx', 'id', 'l', 't', 'r', 'b', 'integrity',
+                                              'pt0_x', 'pt0_y', 'pt1_x', 'pt1_y',
+                                              'pt2_x', 'pt2_y', 'pt3_x', 'pt3_y',
+                                              'pt4_x', 'pt4_y', 'pt5_x', 'pt5_y',
+                                              'pt6_x', 'pt6_y', 'pt7_x', 'pt7_y',
+                                              'velocity_x', 'velocity_y', 'velocity_z',
+                                              'cloudyness', 'precipitation', 'sun_altitude_angle',
+                                              'wind_intensity']]
         self.bboxes_group = self.bboxes.groupby(self.bboxes['frame_idx'])
-        self.image_path_format = os.path.join(image_folder, "{}.jpg")
+        self.data = {int(k):v.iloc[:, 1:].to_numpy() for k, v in self.bboxes_group}
 
-        self.data = {}
-        for k, v in self.bboxes_group:
-            self.data[int(k)] = (v.iloc[:, 1:].to_numpy(), self.image_path_format.format(int(k)))
+        if self.is_video:
+            self.video_file = file
+        else:
+            self.image_folder = file
+            self.image_path_format = os.path.join(self.image_folder, "{}.jpg")
+            self.image_files = [self.image_path_format.format(int(k)) for k in self.bboxes_group.keys()]
 
     def __len__(self):
         return len(self.data)
@@ -43,26 +59,37 @@ class SingleRecordingData:
         if item not in self.data.keys():
             return None, None
 
-        data = self.data[item]
-        return cv2.imread(data[1]), data[0]
+        if self.is_video:
+            ret, frame = VideoCaptureAsync.get_frame(self.video_file, item)
+            return frame, self.data[item]
+        else:
+            return cv2.imread(self.image_files[item]), self.data[item]
 
 
 class RecordingData:
-    def __init__(self, root_folder):
+    def __init__(self, root_folder, is_video=False):
+        self.is_video = is_video
         self.gt_folder = os.path.join(root_folder, 'gt')
-        self.image_folder = os.path.join(root_folder, 'img')
 
         self.csv_paths = glob.glob(os.path.join(self.gt_folder, "*.csv"))
         self.base_names = [os.path.splitext(os.path.basename(p))[0] for p in self.csv_paths]
-        self.image_folders = [os.path.join(self.image_folder, b) for b in self.base_names]
 
+        print("Reading data....")
         self.datas = []
-
-        for csv_path, image_folder, base_name in zip(self.csv_paths, self.image_folders, self.base_names):
-            if not os.path.exists(image_folder) or not os.path.exists(csv_path):
-                continue
-
-            self.datas += [SingleRecordingData(csv_path, image_folder, base_name, min_integrity=0.3)]
+        if is_video:
+            self.video_folder = root_folder
+            self.video_paths = [os.path.join(self.video_folder, b + ".avi") for b in self.base_names]
+            for csv_path, video_path, base_name in tqdm.tqdm(zip(self.csv_paths, self.video_paths, self.base_names)):
+                if not os.path.exists(video_path) or not os.path.exists(csv_path):
+                    continue
+                self.datas += [SingleRecordingData(csv_path, video_path, base_name, min_integrity=0.3, is_video=self.is_video)]
+        else:
+            self.image_folder = os.path.join(root_folder, 'img')
+            self.image_folders = [os.path.join(self.image_folder, b) for b in self.base_names]
+            for csv_path, image_folder, base_name in zip(self.csv_paths, self.image_folders, self.base_names):
+                if not os.path.exists(image_folder) or not os.path.exists(self.csv_paths):
+                    continue
+                self.datas += [SingleRecordingData(csv_path, image_folder, base_name, min_integrity=0.3)]
 
         self.lens = [len(d) for d in self.datas]
 
@@ -81,96 +108,30 @@ class RecordingData:
         return self.datas[i][rest_len]
 
 
-
-
-def cv_draw_one_box(frame,
-                    box,
-                    color,
-                    content_color=None,
-                    alpha=0.5,
-                    text="",
-                    font_color=None,
-                    with_border=True,
-                    border_color=None):
-    """
-    Draw a box on a frame
-    :param frame:
-    :param box:
-    :param color:
-    :param alpha:
-    :param text:
-    :param font_color:
-    :param with_border:
-    :param border_color:
-    :return:
-    """
-    # draw box content
-    if content_color is None:
-        content_color = color
-    (l, t, r, b) = tuple([int(b) for b in box])
-    roi = frame[t:b, l:r]
-    black_box = np.zeros_like(roi)
-    black_box[:, :, :] = content_color
-    cv2.addWeighted(roi, alpha, black_box, 1-alpha, 0, roi)
-    # draw border
-    if with_border:
-        if border_color is None:
-            border_color = color
-        cv2.rectangle(frame, (l, t), (r, b), border_color, 1)
-    # put text
-    if font_color is None:
-        font_color = color
-    cv2.putText(frame, text, (l, t), cv2.FONT_HERSHEY_SIMPLEX, 1, font_color)
-    return frame
-
-
-def cv_draw_mult_boxes(frame, boxes, colors=None):
-    """
-    Draw multiple boxes on one frame
-    :param frame: the frame to be drawn
-    :param boxes: all the boxes, whoes shape is [n, 4]
-    :param color: current boxes' color
-    :return:
-    """
-    boxes_len = len(boxes)
-    if colors is None:
-        colors = [get_random_color(i) for i in range(boxes_len)]
-    for box, color in zip(boxes, colors):
-        frame = cv_draw_one_box(frame, box, color)
-    return frame
-
-
-def get_random_color(seed=None):
-    """
-    Get the random color.
-    :param seed: if seed is not None, then seed the random value
-    :return:
-    """
-    if seed is not None:
-        np.random.seed(seed)
-    return tuple([np.random.randint(0, 255) for i in range(3)])
-
-def get_random_colors(num, is_seed=True):
-    """
-    Get a set of random color
-    :param num: the number of color
-    :param is_seed: is the random seeded
-    :return: a list of colors, i.e. [(255, 0, 0), (0, 255, 0)]
-    """
-    if is_seed:
-        colors = [get_random_color(i) for i in range(num)]
-    else:
-        colors = [get_random_color() for _ in range(num)]
-    return colors
-
-
 if __name__ == "__main__":
-    rd = RecordingData(args.root_folder)
+    rd = RecordingData(args.root_folder, args.is_video)
+    tracker = SimplerTracker()
+
+    with_track = False,
+    with_8_points = False,
+    with_boxes = False,
+    with_vis = False
+    with_weather=False
 
     for frame, bboxes in rd:
         if frame is None or bboxes is None:
             continue
-
-        cv_draw_mult_boxes(frame, bboxes[:, 1:-1])
+        tracker.update(bboxes)
+        frame = tracker.draw(frame, with_track, with_8_points, with_boxes, with_vis, with_weather)
         cv2.imshow("result", frame)
-        cv2.waitKey(0)
+        c = cv2.waitKey(0)
+        if c == ord('t'):
+            with_track = not with_track
+        elif c == ord('b'):
+            with_boxes = not with_boxes
+        elif c == ord('v'):
+            with_vis = not with_vis
+        elif c == ord('p'):
+            with_8_points = not with_8_points
+        elif c == ord('w'):
+            with_weather = not with_weather

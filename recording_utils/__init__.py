@@ -7,3 +7,6 @@
 
 from .scamera import SCamera
 from .recorder_client import SRecorder
+from .videocaptureasync import VideoCaptureAsync
+from .draw_utils import cv_draw_mult_boxes
+from .tracker import SimplerTracker

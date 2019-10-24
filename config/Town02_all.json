@@ -3,7 +3,7 @@
   "save_root": "/home/ssj/Data/github/AwesomeMOTDataset/Dataset/Town02/All",
   "host": "127.0.0.1",
   "port": 2000,
-  "weathers": ["Clear", "Cloudy", "Rain"],
+    "weathers": ["Clear", "Cloudy", "Rain"],
   "vehicle_num": [50, 75, 95],
   "cameras": {
     "Easy_Camera_0": {"width": 1920, "height": 1080, "x": 173.4830780029297, "y": 175.37460327148438, "z": 25.6076602935791, "fov": 90.0, "roll": -0.9999995231628418, "yaw": 4.997408390045166, "pitch": -68.99832153320312, "max_record_frame": 10000},
