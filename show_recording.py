@@ -19,13 +19,23 @@ argparser = argparse.ArgumentParser(
 
 argparser.add_argument(
         '--root_folder',
-        default='/media/ssj/新加卷/temp/e-3',
+        default='/media/ssj/新加卷/temp/h-2',
         help='A root folder contains the gt folder and img folder')
 
 argparser.add_argument(
         '--is_video',
         default=True,
         help='reading from video or from image folders')
+
+argparser.add_argument(
+        '--save_video',
+        default=True,
+        help='save video (True) or not (False)')
+
+argparser.add_argument(
+        '--save_video_folder',
+        default='./saved_video',
+        help='The folder of saving video')
 
 args = argparser.parse_args()
 
@@ -112,11 +122,21 @@ if __name__ == "__main__":
     rd = RecordingData(args.root_folder, args.is_video)
     tracker = SimplerTracker()
 
-    with_track = False,
-    with_8_points = False,
-    with_boxes = False,
-    with_vis = False
-    with_weather=False
+    with_track = True
+    with_8_points = True
+    with_boxes = True
+    with_vis = True
+    with_weather = True
+
+    # save videos
+    if args.save_video:
+        if not os.path.exists(args.save_video_folder):
+            os.makedirs(args.save_video_folder)
+
+        # get video name
+        video_file = os.path.join(args.save_video_folder, "demo.avi")
+        fourcc = cv2.VideoWriter_fourcc(*"XVID")
+        vw = cv2.VideoWriter(video_file, fourcc, 30, (1920, 1080))
 
     for frame, bboxes in rd:
         if frame is None or bboxes is None:
@@ -124,6 +144,10 @@ if __name__ == "__main__":
         tracker.update(bboxes)
         frame = tracker.draw(frame, with_track, with_8_points, with_boxes, with_vis, with_weather)
         cv2.imshow("result", frame)
+
+        if args.save_video:
+            vw.write(frame)
+
         c = cv2.waitKey(0)
         if c == ord('t'):
             with_track = not with_track
