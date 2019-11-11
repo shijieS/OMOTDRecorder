@@ -33,14 +33,14 @@ argparser.add_argument(
 
 argparser.add_argument(
     '--auto_save',
-    default=True,
+    default=False,
     type=str2bool,
     help='whether show display windows or not'
 )
 
 argparser.add_argument(
     '--flag_show_windows',
-    default=False,
+    default=True,
     type=str2bool,
     help='whether show display windows or not'
 )
@@ -75,7 +75,7 @@ from tqdm import trange
 args = argparser.parse_args()
 
 def start_recording(config_name, recording_num_scale, flag_show_windows, auto_save, port=None, weathers=None, vehicle_nums=None):
-    config = Configure.get_config(config_name)
+    config, config_file = Configure.get_config(config_name)
     if port is None:
         port = config['port']
 
@@ -95,7 +95,9 @@ def start_recording(config_name, recording_num_scale, flag_show_windows, auto_sa
                                  weather_name=cond[0],
                                  vehicle_num=cond[1],
                                  flag_show_windows=flag_show_windows,
-                                 auto_save=auto_save
+                                 auto_save=auto_save,
+                                 config=config,
+                                 config_file = config_file
                                  )
             camera_keys = cameras.keys()
 
@@ -124,7 +126,9 @@ def start_recording(config_name, recording_num_scale, flag_show_windows, auto_sa
                                      weather_name=cond[0],
                                      vehicle_num=cond[1],
                                      flag_show_windows=flag_show_windows,
-                                     auto_save=auto_save
+                                     auto_save=auto_save,
+                                     config=config,
+                                     config_file = config_file
                                      )
                 recorder.create_rgb_camera(
                     width=cameras[k]["width"],

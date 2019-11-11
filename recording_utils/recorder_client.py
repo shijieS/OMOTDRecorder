@@ -22,6 +22,7 @@ import weakref
 import math
 import sys
 from tqdm import trange
+import json
 
 
 class SRecorder:
@@ -30,7 +31,9 @@ class SRecorder:
                  vehicle_num=100,
                  save_root='./recorders/',
                  flag_show_windows=False,
-                 auto_save=True):
+                 auto_save=True,
+                 config=None,
+                 config_file=None):
         """
         This recorder is used for recording the detected boxes in RGB camera
         :param host: host ip
@@ -57,6 +60,9 @@ class SRecorder:
         self.flag_show_label = False
         self.flag_image_process = auto_save
         self.flag_show_windows = flag_show_windows
+
+        self.config = config
+        self.config_file = config_file
 
         # Set the yellow light longer considering the traffic jam
         all_traffic_ligts = self.world.get_actors().filter('*.traffic_light')
@@ -99,6 +105,18 @@ class SRecorder:
     def _get_all_pedestrians(self):
         all_actors = self.world.get_actors()
         return [a for a in all_actors if 'pedestrian' in a.type_id]
+
+    def try_get_new_camera_tag(self):
+        """
+        Try to get the new camera tag
+        :return: the new camera tag
+        """
+        i = 0
+        while True:
+            tag = 'new_camera_{}'.format(i)
+            if tag not in self.camera_dict.keys():
+                return tag
+            i += 1
 
     def create_rgb_camera(self,
                       width=1920, height=1080, fov=110.0,
@@ -194,6 +212,14 @@ class SRecorder:
                 elif event.key == pygame.K_TAB:
                     self.display_camera = (self.display_camera + 1) % len(self.camera_dict)
                     self.current_camera = None # remove current selected camera
+                elif event.key == pygame.K_INSERT:
+                    tag = self.try_get_new_camera_tag()
+                    self.create_rgb_camera(camera_tag=tag)
+                    self.camera_dict[tag].add_listen_queue()
+                    if self.flag_show_windows:
+                        self.camera_dict[tag].add_display()
+                    self.display_camera = list(self.camera_dict.keys()).index(tag)
+                    self.current_camera = None  # remove current selected camera
                 elif event.key == pygame.K_1:
                     self.flag_image_process = not self.flag_image_process
                     self._get_current_camera().reset_depth_camera()
@@ -207,7 +233,8 @@ class SRecorder:
                     self.move_scale += 10
                 elif event.key == pygame.K_MINUS:
                     self.move_scale -= 10
-                elif event.key == pygame.K_INSERT:
+                elif event.key == pygame.K_RETURN:
+                    self._save_current_cameras()
                     self._get_current_camera().save_transform(
                         os.path.join(
                             self.save_root,
@@ -271,6 +298,20 @@ class SRecorder:
 
         return self.current_camera
 
+    def _get_current_camera_tag(self):
+        return list(self.camera_dict.keys())[self.display_camera]
+
+    def _save_current_cameras(self):
+        tag = self._get_current_camera_tag()
+        # if tag not in self.config['cameras'].keys():
+        self.config['cameras'].__setitem__(tag, self.camera_dict[tag].get_camera_params())
+        self._save_config()
+
+    def _save_config(self):
+        with open(self.config_file, 'w') as f:
+            json.dump(self.config, f, sort_keys=True, indent=4)
+        pass
+
     def save_label_vehicles(self, camera_tag, image, image_depth, current_record_frame_index, flag_save_gt_data=False):
         """
         Label vehicles and save the labeled images into the save_root directories
@@ -327,20 +368,23 @@ class SRecorder:
                               rect[1],
                               (int(random.random()*255), int(random.random()*255), int(random.random()*255)), 1)
 
+        if self.max_record_frame == sys.maxsize:
+            return image
         # cv2.putText(image, str(frame_number),
         #             (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
         #             1, (0, 255, 0), 2)
 
-        difficulty_level = ""
-        for s in self.camera_level_str:
-            if s in camera_tag:
-                difficulty_level = s
-                break
+        # difficulty_level = ""
+        # for s in self.camera_level_str:
+        #     if s in camera_tag:
+        #         difficulty_level = s
+        #         break
 
         # current_camera_tag = camera_tag
         # if len(difficulty_level) > 0:
         #     current_save_root = os.path.join(current_save_root, difficulty_level)
         #     current_camera_tag = camera_tag[len(difficulty_level)+1:]
+
         current_save_root = os.path.join(self.save_root, self.weather_name)
         current_save_root = os.path.join(current_save_root, "{}".format(self.vehicle_num))
 
@@ -404,7 +448,7 @@ class SRecorder:
                 camera = self._get_current_camera()
                 image = camera.get_image(frame_count)
                 camera.display_image(image)
-                show_str = "Current Camera: {}   |   ".format(k) + \
+                show_str = "Current Camera: {}   |   ".format(self._get_current_camera_tag()) + \
                            '% 5d FPS' % clock.get_fps() + "   |   Frame: {}".format(frame_count)
                 text_surface = font.render(show_str, True, (255, 255, 255))
                 camera.display.blit(text_surface, (8, 10))

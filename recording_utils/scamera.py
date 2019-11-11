@@ -342,7 +342,18 @@ class SCamera:
         r = t.rotation
 
         param = OrderedDict({
-            level_str+"_Camera_{}".format(self.insert_camera_index): OrderedDict([
+            level_str+"_Camera_{}".format(self.insert_camera_index): self.get_camera_params()})
+        self.insert_camera_index += 1
+
+        with open(save_path, 'a+') as f:
+            js = json.dump(param, f)
+            f.write("\n")
+
+    def get_camera_params(self):
+        t = self.camera.get_transform()
+        l = t.location
+        r = t.rotation
+        param = dict([
             ('width', self.width),
             ('height', self.height),
             ('x', l.x),
@@ -353,13 +364,8 @@ class SCamera:
             ('yaw', r.yaw),
             ('pitch', r.pitch),
             ('max_record_frame', 10000)
-        ])})
-        self.insert_camera_index += 1
-
-        with open(save_path, 'a+') as f:
-            js = json.dump(param, f)
-            f.write("\n")
-
+        ])
+        return param
 
     def update_gt_data(self, frame_idx, id, rect, bbox, ratio, physical_param, vehicle):
         """
