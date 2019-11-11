@@ -1,11 +1,25 @@
-# Awesome Multiple Object Tracking Dataset Recorder
-> Here, we publish an awesome multiple object tracker recorder
+# Omni-MOT Dataset Recorder
+> This is the repository of recording [Omni-MOT]() dataset. Its functions include: 
+>
+> - Camera Operations: Move forward backward, pitch up down, roll left right, yaw left right
+> - Save camera parameters
+> - Calculate the ground truth data for multiple object tracking (i.e. 3D bounding boxes, 2D bounding boxes, Visibility)
+> - Save Videos and Ground Truth
 
 ## Requirement
 - CARLA 0.9.4
+
 - \>= Ubuntu 16.0
 
+- Install the required packages
+
+  ```shell
+  cd <project>
+  pip install -r requirement.txt
+  ```
+
 ## Usage
+
 ### Open
 ```shell
 cd <CARLA Project>
