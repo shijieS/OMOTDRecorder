@@ -11,8 +11,8 @@ sleep 20
 echo "==================Start Recording Script=================="
 
 
-x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/AMOTDRecorder; /home/ssj/miniconda3/envs/CARLA/bin/python start_recording.py --port=2000 --config_name=Town02_all.json --recording_num_scale=0.3"
-#x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/AMOTDRecorder; /home/ssj/miniconda3/envs/CARLA/bin/python start_recording.py --port=2010 --config_name=Town04_all.json --recording_num_scale=0.3"
-x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/AMOTDRecorder; /home/ssj/miniconda3/envs/CARLA/bin/python start_recording.py --port=2020 --config_name=Town05_all.json --recording_num_scale=0.3"
+x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/OMOTDRecorder; /home/ssj/miniconda3/envs/CARLA/bin/python start_recording.py --port=2000 --config_name=Town02_all.json --recording_num_scale=0.3"
+#x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/OMOTDRecorder; /home/ssj/miniconda3/envs/CARLA/bin/python start_recording.py --port=2010 --config_name=Town04_all.json --recording_num_scale=0.3"
+x-terminal-emulator -e sh -c "cd /home/ssj/Data/github/OMOTDRecorder; /home/ssj/miniconda3/envs/CARLA/bin/python start_recording.py --port=2020 --config_name=Town05_all.json --recording_num_scale=0.3"
 
 echo "==================Well Done!!=================="
