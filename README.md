@@ -142,7 +142,21 @@ cd <CARLA Project>
 
 ## Citation
 
-Paper will be released soon :-).
+```
+@inproceedings{ShiJie20,
+  author = {Shijie Sun, Naveed Aktar, XiangYu Song, Huansheng Song, Ajmal Mian, Mubarak Shah},
+  title = {Simultaneous Detection and Tracking with Motion Modelling for Multiple Object Tracking},
+  booktitle = {Proceedings of the European conference on computer vision (ECCV)}},
+  year = {2020}
+
+@inproceedings{Dosovitskiy17,
+  title = {{CARLA}: {An} Open Urban Driving Simulator},
+  author = {Alexey Dosovitskiy and German Ros and Felipe Codevilla and Antonio Lopez and Vladlen Koltun},
+  booktitle = {Proceedings of the 1st Annual Conference on Robot Learning},
+  pages = {1--16},
+  year = {2017}
+}
+```
 
 ## Acknowledge
 
